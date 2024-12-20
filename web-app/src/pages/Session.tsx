@@ -6,7 +6,8 @@ import { Badge, Box, Button, Card, CardContent, Typography } from '@mui/material
 import Chatbox from '../components/Chatbox';
 import useSessionStore from '../stores/sessionStore';
 import socket from '../socket';
-import { useEffect, useState } from 'react';
+import { SetStateAction, useEffect, useState } from 'react';
+import { Question } from '../types';
 
 enum SessionState {
     READY = 'READY',
@@ -32,22 +33,37 @@ export function Session() {
     }
 
     useEffect(() => {
-        socket.on('timer', (timer) => {
+        const handleTimer = (timer: { timeLeft: SetStateAction<number | null>; }) => {
             setTimer(timer.timeLeft)
-        })
-        socket.on('eventStarted', () => {
+        }
+
+        const handleEventStarted = () => {
             setSessionState(SessionState.IN_PROGRESS)
-        })
-        socket.on('eventEnded', () => {
+        }
+
+        const handleEventEnded = () => {
             setSessionState(SessionState.ENDED)
             setQIndex(0)
             setTimer(null)
-        })
-        socket.on('sessionRestarted', ({ questions }) => {
+        }
+
+        const handleSessionRestarted = ({ questions }: { questions: Question[] }) => {
             setQuestions(questions)
             setSessionState(SessionState.READY)
-        })
-    })
+        }
+
+        socket.on('timer', handleTimer)
+        socket.on('eventStarted', handleEventStarted)
+        socket.on('eventEnded', handleEventEnded)
+        socket.on('sessionRestarted', handleSessionRestarted)
+
+        return () => {
+            socket.off('timer', handleTimer)
+            socket.off('eventStarted', handleEventStarted)
+            socket.off('eventEnded', handleEventEnded)
+            socket.off('sessionRestarted', handleSessionRestarted)
+        }
+    }, [])
 
     const handleAnswer = (answer: string) => {
         // emit answer event

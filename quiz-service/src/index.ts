@@ -4,58 +4,6 @@ import { Server } from 'socket.io'
 import Redis from 'ioredis'
 import getQuizzes from "./mongo";
 
-const questionsMock = [
-    {
-        question: "What is the capital of France?",
-        choices: ["Paris", "London", "Berlin", "Madrid"],
-        correct_choice: "Paris"
-    },
-    {
-        question: "What is 2 + 2?",
-        choices: ["3", "4", "5", "6"],
-        correct_choice: "4"
-    },
-    {
-        question: "What is the largest planet in our solar system?",
-        choices: ["Earth", "Mars", "Jupiter", "Saturn"],
-        correct_choice: "Jupiter"
-    },
-    {
-        question: "Who wrote 'To Kill a Mockingbird'?",
-        choices: ["Harper Lee", "Mark Twain", "Ernest Hemingway", "F. Scott Fitzgerald"],
-        correct_choice: "Harper Lee"
-    },
-    {
-        question: "What is the boiling point of water?",
-        choices: ["90°C", "100°C", "110°C", "120°C"],
-        correct_choice: "100°C"
-    },
-    {
-        question: "What is the chemical symbol for gold?",
-        choices: ["Au", "Ag", "Pb", "Fe"],
-        correct_choice: "Au"
-    },
-    {
-        question: "Who painted the Mona Lisa?",
-        choices: ["Vincent van Gogh", "Pablo Picasso", "Leonardo da Vinci", "Claude Monet"],
-        correct_choice: "Leonardo da Vinci"
-    },
-    {
-        question: "What is the smallest prime number?",
-        choices: ["0", "1", "2", "3"],
-        correct_choice: "2"
-    },
-    {
-        question: "What is the capital of Japan?",
-        choices: ["Beijing", "Seoul", "Tokyo", "Bangkok"],
-        correct_choice: "Tokyo"
-    },
-    {
-        question: "What is the speed of light?",
-        choices: ["300,000 km/s", "150,000 km/s", "450,000 km/s", "600,000 km/s"],
-        correct_choice: "300,000 km/s"
-    }
-];
 
 const app = express();
 const PORT = 3000;
@@ -195,11 +143,13 @@ io.on('connection', (socket) => {
                 await redis.hset(`leaderboard:${sessionId}`, participant, 0);
             }
 
+            const questions = await getQuizzes()
+
             // get 10 new questions from DB
-            await redis.set(`questions:${sessionId}`, JSON.stringify(questionsMock));
+            await redis.set(`questions:${sessionId}`, JSON.stringify(questions));
 
             io.to(sessionId).emit('sessionRestarted', {
-                questions: questionsMock.map(q => ({ question: q.question, choices: q.choices }))
+                questions: questions.map(q => ({ question: q.question, choices: q.choices }))
             });
 
             await handleLeaderboardUpdate(sessionId)
