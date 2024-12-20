@@ -1,0 +1,7 @@
+node_modules
+
+# Ignore MongoDB data files
+data/mongodb/WiredTiger.turtle
+data/mongodb/WiredTiger.wt
+data/mongodb/diagnostic.data/
+data/mongodb/journal/
